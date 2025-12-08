@@ -1,135 +1,78 @@
-//
-// CPET 9.0 — Chain-of-Thought Simulator
-// Styl: GPT-4, logiczny, analityczny, poważny
-// Kluczowa funkcja: wewnętrzne myślenie przed każdą odpowiedzią
-//
+const chat = document.getElementById("chat");
+const msgInput = document.getElementById("msg");
+const sendBtn = document.getElementById("send");
 
-function pick(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
+// AVATAR IMAGE
+const BOT_AVATAR = "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=PiotrekAI";
+const USER_AVATAR = "https://api.dicebear.com/7.x/adventurer/svg?seed=User";
+
+function addMessage(text, sender = "bot") {
+    const box = document.createElement("div");
+    box.className = "msgBox " + sender;
+
+    const avatar = document.createElement("img");
+    avatar.className = "avatar";
+    avatar.src = sender === "bot" ? BOT_AVATAR : USER_AVATAR;
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
+
+    box.appendChild(avatar);
+    box.appendChild(bubble);
+
+    chat.appendChild(box);
+    chat.scrollTop = chat.scrollHeight;
 }
 
-// PAMIĘĆ
-let memory = {
-    lastUserInput: "",
-    lastIntent: "",
-    conversation: []
-};
+// CPET 11.0 – pseudo GPT-like thinking engine
+function CPETbrain(input) {
+    input = input.toLowerCase();
 
-// ----------------------------
-//  ANALIZA INTENCJI
-// ----------------------------
-function analyzeIntent(text) {
-    text = text.toLowerCase();
-
-    if (text.includes("kim jesteś") || text.includes("kto ty"))
-        return "identity";
-
-    if (text.includes("co robisz") || text.includes("co porabiasz"))
-        return "activity";
-
-    if (text.includes("dlaczego") || text.startsWith("czemu"))
-        return "why";
-
-    if (text.includes("co to jest"))
-        return "definition";
-
-    if (text.includes("jak działa"))
-        return "explain";
-
-    if (text.includes("?"))
-        return "generalQuestion";
-
-    return "generalMessage";
-}
-
-
-// ----------------------------
-//  MODUŁY ODPOWIEDZI (finalne, skrócone jak GPT-4)
-// ----------------------------
-const FinalModules = {
-
-    identity(thought) {
-        return "Jestem CPET — system analityczny zaprojektowany do logicznej rozmowy. " + thought.summary;
-    },
-
-    activity(thought) {
-        return "Analizuję twoją wiadomość i dobieram odpowiedź w oparciu o kontekst i strukturę rozmowy. " + thought.summary;
-    },
-
-    why(thought) {
-        return "Przyczyna wynika z kilku nakładających się czynników — mogę rozwinąć to szerzej. " + thought.summary;
-    },
-
-    explain(thought) {
-        return "Mechanizm działania można ująć jako sekwencję analizy, interpretacji i reakcji systemu. " + thought.summary;
-    },
-
-    definition(thought) {
-        return "Można to rozumieć jako pojęcie opisujące określone zjawisko lub mechanizm. " + thought.summary;
-    },
-
-    generalQuestion(thought) {
-        return "To interesujące pytanie, które można ująć na kilka sposobów. " + thought.summary;
-    },
-
-    generalMessage(thought) {
-        return "Rozumiem. Jeśli chcesz, możemy rozwinąć ten wątek. " + thought.summary;
-    }
-};
-
-
-// ----------------------------
-//  MEGA FUNKCJA: CHAIN OF THOUGHT
-//  CPET 9.0 najpierw *myśli wewnętrznie*
-// ----------------------------
-function generateChainOfThought(userInput, intent) {
-
-    // wewnętrzny dialog – ukryty
-    const hiddenThoughts = [
-        "Analizuję strukturę zdania i szukam ukrytej intencji.",
-        "Sprawdzam, czy użytkownik oczekuje faktów, interpretacji czy relacji osobistej.",
-        "Porównuję wiadomość z wcześniejszym kontekstem rozmowy.",
-        "Buduję kilka możliwych odpowiedzi i wybieram najbardziej spójną.",
-        "Patrzę, jaki poziom szczegółowości będzie najbardziej trafny.",
-        "Starannie dobieram ton — neutralny, analityczny, poważny."
+    // Mini-LLM: detects topic and synthesizes a human-like answer
+    const topics = [
+        ["kim jesteś", "Czym mogę być, zależy od tego, czego potrzebujesz. Mogę być rozmówcą, przewodnikiem albo systemem, który próbuje zrozumieć Twój sposób myślenia."],
+        ["co robisz", "Analizuję Twoją wiadomość i staram się powiązać ją z tym, co już wiem. Dzięki temu odpowiedź staje się głębsza i bardziej logiczna."],
+        ["hej", "Hej! Widzę Cię i słyszę. Co masz dziś w głowie?"],
+        ["jak dziala", "Przekształcam tekst na znaczenia, łączę je w struktury i dopiero wtedy buduję odpowiedź. To nie mechaniczne losowanie — to proces."],
     ];
 
-    // wybór 2–4 myśli
-    let thoughts = [];
-    const count = Math.floor(Math.random() * 3) + 2;
-
-    for (let i = 0; i < count; i++) {
-        thoughts.push(pick(hiddenThoughts));
+    for (let t of topics) {
+        if (input.includes(t[0])) return t[1];
     }
 
-    // podsumowanie — to jest używane w finalnej odpowiedzi
-    const summary = pick([
-        "Starałem się ująć to w sposób możliwie klarowny.",
-        "Ująłem to w formie najbardziej logicznej odpowiedzi.",
-        "Dostosowałem wyjaśnienie do twojego stylu pytania.",
-        "Zsyntetyzowałem najważniejsze elementy odpowiedzi."
-    ]);
-
-    return {
-        internal: thoughts,   // ukryty chain of thought
-        summary: summary      // to wchodzi do odpowiedzi końcowej
-    };
+    // Default deep-thought answer
+    return (
+        "To, co mówisz, można rozumieć na kilku poziomach. " +
+        "Jeśli spojrzymy szerzej, pojawiają się dodatkowe znaczenia, " +
+        "które warto rozwinąć. Powiedz proszę — w którą stronę chcesz iść?"
+    );
 }
 
-
-// ----------------------------
-//  GŁÓWNA FUNKCJA ODPOWIEDZI
-// ----------------------------
-function CPETreply(userInput) {
-
-    memory.lastUserInput = userInput;
-    memory.conversation.push(userInput);
-
-    const intent = analyzeIntent(userInput);
-
-    // 1. Najpierw CPET tworzy ukrytą analizę
-    const thought = generateChainOfThought(userInput, intent);
-
-    // 2. Potem generuje elegancką, skróconą odpowiedź GPT-4
-    return FinalModules[intent](thought);
+// Typing animation
+function botReply(text) {
+    addMessage("...", "bot");
+    setTimeout(() => {
+        // remove animation
+        chat.lastChild.remove();
+        addMessage(text, "bot");
+    }, 700);
 }
+
+// SEND HANDLER
+sendBtn.onclick = () => {
+    const text = msgInput.value.trim();
+    if (!text) return;
+
+    addMessage(text, "user");
+
+    const answer = CPETbrain(text);
+    botReply(answer);
+
+    msgInput.value = "";
+};
+
+msgInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") sendBtn.click();
+});
+
