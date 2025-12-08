@@ -1,28 +1,24 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-<title>CPET – Zapytaj, wiedź więcej</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>CPET – zapytaj więcej</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+    <div id="header">
+        <h1>CPET</h1>
+        <p>Zapytaj • Dowiedz się więcej • Myśl głębiej</p>
+    </div>
 
-<div class="header">
-    <img src="https://i.imgur.com/QdVr4YW.png" class="logo">
-    <h1>CPET</h1>
-    <p class="subtitle">Zapytaj • Dowiedz się więcej • Myśl głębiej</p>
-</div>
+    <div id="chat"></div>
 
-<div id="chatWindow" class="chat-window"></div>
+    <form id="chat-form">
+        <input type="text" id="input" placeholder="Napisz wiadomość...">
+        <button type="submit">Wyślij</button>
+    </form>
 
-<div class="input-area">
-    <input id="userInput" type="text" placeholder="Napisz wiadomość..." autofocus>
-</div>
-
-<footer>
-    Created by Piotrek™ 2025
-</footer>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
