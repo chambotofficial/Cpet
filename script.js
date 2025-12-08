@@ -1,172 +1,135 @@
-// =======================================
-// CPET 5.0 — GPT-SIM (Human-like AI)
-// By Piotrek 💙
-// =======================================
+//
+// CPET 9.0 — Chain-of-Thought Simulator
+// Styl: GPT-4, logiczny, analityczny, poważny
+// Kluczowa funkcja: wewnętrzne myślenie przed każdą odpowiedzią
+//
 
-// Losowanie
-const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-
-// ------------------------------
-// 1. WYKRYWANIE KLUCZY I EMOCJI
-// ------------------------------
-
-function analyzeTone(text) {
-    const t = text.toLowerCase();
-
-    if (t.includes("dlaczego")) return "przyczyna";
-    if (t.includes("co to")) return "definicja";
-    if (t.includes("jak")) return "instrukcja";
-    if (t.endsWith("?")) return "pytanie";
-    if (t.includes("nie wiem")) return "niepewność";
-    if (t.includes("boję") || t.includes("strach")) return "strach";
-    if (t.includes("cieszę") || t.includes("fajnie")) return "pozytywne";
-    return "neutralne";
+function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// ------------------------------
-// 2. BUDOWANIE ODPOWIEDZI GPT-STYLE
-// ------------------------------
+// PAMIĘĆ
+let memory = {
+    lastUserInput: "",
+    lastIntent: "",
+    conversation: []
+};
 
-function mainThought(tone, userMsg) {
-    const base = {
-        pytanie: [
-            `To ciekawe pytanie. Gdy spojrzymy na to szerzej, można zauważyć, że ${smartExplain()}.`,
-            `Dobre pytanie — odpowiedź zależy od kilku czynników, ale w uproszczeniu ${shortAnswer()}.`
-        ],
-        przyczyna: [
-            `Powód jest bardziej złożony, niż na pierwszy rzut oka się wydaje. Zwykle ${smartExplain()}.`,
-            `To wynika z naturalnej dynamiki procesów — ${shortAnswer()}.`
-        ],
-        definicja: [
-            `Można to opisać jako strukturę zależności, która ${smartExplain()}.`,
-            `To pojęcie odnosi się do sposobu, w jaki system organizuje informacje.`
-        ],
-        instrukcja: [
-            `Można to ująć w formie krótkiego procesu: ${stepByStep()}.`,
-            `Najprościej rozbić to na kilka etapów — ${stepByStep()}.`
-        ],
-        niepewność: [
-            `Rozumiem, że możesz się tak czuć. W takich sytuacjach warto pamiętać, że ${generalThought()}.`,
-            `To całkowicie normalne — wiele osób tak reaguje. Kluczowe jest to, że ${smartExplain()}.`
-        ],
-        strach: [
-            `Strach to naturalna reakcja organizmu. Czasem wynika z tego, że ${smartExplain()}.`,
-            `To normalne, że tak się czujesz. Warto spojrzeć na to łagodniej — ${generalThought()}.`
-        ],
-        pozytywne: [
-            `Super, że masz takie podejście! Często właśnie dzięki temu ${generalThought()}.`,
-            `Brzmi świetnie! W takich momentach łatwiej zauważyć, że ${smartExplain()}.`
-        ],
-        neutralne: [
-            `Rozumiem. Jeśli spojrzymy na to z dystansu — ${generalThought()}.`,
-            `To interesujące spostrzeżenie. Można to też rozumieć tak: ${smartExplain()}.`
-        ]
+// ----------------------------
+//  ANALIZA INTENCJI
+// ----------------------------
+function analyzeIntent(text) {
+    text = text.toLowerCase();
+
+    if (text.includes("kim jesteś") || text.includes("kto ty"))
+        return "identity";
+
+    if (text.includes("co robisz") || text.includes("co porabiasz"))
+        return "activity";
+
+    if (text.includes("dlaczego") || text.startsWith("czemu"))
+        return "why";
+
+    if (text.includes("co to jest"))
+        return "definition";
+
+    if (text.includes("jak działa"))
+        return "explain";
+
+    if (text.includes("?"))
+        return "generalQuestion";
+
+    return "generalMessage";
+}
+
+
+// ----------------------------
+//  MODUŁY ODPOWIEDZI (finalne, skrócone jak GPT-4)
+// ----------------------------
+const FinalModules = {
+
+    identity(thought) {
+        return "Jestem CPET — system analityczny zaprojektowany do logicznej rozmowy. " + thought.summary;
+    },
+
+    activity(thought) {
+        return "Analizuję twoją wiadomość i dobieram odpowiedź w oparciu o kontekst i strukturę rozmowy. " + thought.summary;
+    },
+
+    why(thought) {
+        return "Przyczyna wynika z kilku nakładających się czynników — mogę rozwinąć to szerzej. " + thought.summary;
+    },
+
+    explain(thought) {
+        return "Mechanizm działania można ująć jako sekwencję analizy, interpretacji i reakcji systemu. " + thought.summary;
+    },
+
+    definition(thought) {
+        return "Można to rozumieć jako pojęcie opisujące określone zjawisko lub mechanizm. " + thought.summary;
+    },
+
+    generalQuestion(thought) {
+        return "To interesujące pytanie, które można ująć na kilka sposobów. " + thought.summary;
+    },
+
+    generalMessage(thought) {
+        return "Rozumiem. Jeśli chcesz, możemy rozwinąć ten wątek. " + thought.summary;
+    }
+};
+
+
+// ----------------------------
+//  MEGA FUNKCJA: CHAIN OF THOUGHT
+//  CPET 9.0 najpierw *myśli wewnętrznie*
+// ----------------------------
+function generateChainOfThought(userInput, intent) {
+
+    // wewnętrzny dialog – ukryty
+    const hiddenThoughts = [
+        "Analizuję strukturę zdania i szukam ukrytej intencji.",
+        "Sprawdzam, czy użytkownik oczekuje faktów, interpretacji czy relacji osobistej.",
+        "Porównuję wiadomość z wcześniejszym kontekstem rozmowy.",
+        "Buduję kilka możliwych odpowiedzi i wybieram najbardziej spójną.",
+        "Patrzę, jaki poziom szczegółowości będzie najbardziej trafny.",
+        "Starannie dobieram ton — neutralny, analityczny, poważny."
+    ];
+
+    // wybór 2–4 myśli
+    let thoughts = [];
+    const count = Math.floor(Math.random() * 3) + 2;
+
+    for (let i = 0; i < count; i++) {
+        thoughts.push(pick(hiddenThoughts));
+    }
+
+    // podsumowanie — to jest używane w finalnej odpowiedzi
+    const summary = pick([
+        "Starałem się ująć to w sposób możliwie klarowny.",
+        "Ująłem to w formie najbardziej logicznej odpowiedzi.",
+        "Dostosowałem wyjaśnienie do twojego stylu pytania.",
+        "Zsyntetyzowałem najważniejsze elementy odpowiedzi."
+    ]);
+
+    return {
+        internal: thoughts,   // ukryty chain of thought
+        summary: summary      // to wchodzi do odpowiedzi końcowej
     };
-
-    return pick(base[tone]);
 }
 
-function deepContext() {
-    return pick([
-        "W szerszym ujęciu prowadzi to do ciekawych konsekwencji teoretycznych.",
-        "Daje to sporo miejsca do interpretacji, w zależności od perspektywy.",
-        "Gdy zestawimy to z innymi zjawiskami, widać pewną spójność."
-    ]);
-}
 
-function reflection() {
-    return pick([
-        "Warto o tym pamiętać, bo ułatwia to lepsze zrozumienie tematu.",
-        "To pokazuje, że drobne elementy potrafią tworzyć większy obraz.",
-        "Czasem takie pytania otwierają drogę do jeszcze ciekawszych wniosków."
-    ]);
-}
+// ----------------------------
+//  GŁÓWNA FUNKCJA ODPOWIEDZI
+// ----------------------------
+function CPETreply(userInput) {
 
-function closing() {
-    return pick([
-        "Jeśli chcesz, mogę to rozwinąć.",
-        "Możemy pójść głębiej w ten temat.",
-        "Daj znać, jeśli chcesz to przeanalizować dalej."
-    ]);
-}
+    memory.lastUserInput = userInput;
+    memory.conversation.push(userInput);
 
-// ------------------------------
-// 3. FUNKCJE "PODOBNE DO GPT"
-// ------------------------------
+    const intent = analyzeIntent(userInput);
 
-function smartExplain() {
-    return pick([
-        "jest to efekt współdziałania kilku mechanizmów",
-        "wynika to z naturalnej struktury procesów poznawczych",
-        "łączy się to z dynamiką informacji w systemie"
-    ]);
-}
+    // 1. Najpierw CPET tworzy ukrytą analizę
+    const thought = generateChainOfThought(userInput, intent);
 
-function shortAnswer() {
-    return pick([
-        "chodzi głównie o zależność przyczynowo-skutkową",
-        "to naturalna konsekwencja działania systemu"
-    ]);
-}
-
-function stepByStep() {
-    return pick([
-        "1) obserwacja, 2) analiza, 3) wniosek",
-        "1) rozpoznanie, 2) interpretacja, 3) działanie"
-    ]);
-}
-
-function generalThought() {
-    return pick([
-        "można to rozumieć na kilku poziomach",
-        "to bardziej złożone, niż wydaje się na pierwszy rzut oka"
-    ]);
-}
-
-// ------------------------------
-// 4. GŁÓWNY MODEL AI
-// ------------------------------
-
-function analyze(userMsg) {
-    const tone = analyzeTone(userMsg);
-
-    return (
-        mainThought(tone, userMsg) +
-        " " +
-        deepContext() +
-        " " +
-        reflection() +
-        " " +
-        closing()
-    );
-}
-
-// ------------------------------
-// 5. FRONTEND
-// ------------------------------
-
-document.getElementById("sendBtn").addEventListener("click", sendMsg);
-document.getElementById("userInput").addEventListener("keydown", e => {
-    if (e.key === "Enter") sendMsg();
-});
-
-function sendMsg() {
-    const inp = document.getElementById("userInput");
-    const msg = inp.value.trim();
-    if (!msg) return;
-
-    addMessage("Ty", msg);
-
-    const bot = analyze(msg);
-    setTimeout(() => addMessage("CPET 5.0", bot), 200);
-
-    inp.value = "";
-}
-
-function addMessage(name, txt) {
-    const box = document.getElementById("chatBox");
-    const el = document.createElement("div");
-    el.innerHTML = `<b>${name}:</b> ${txt}`;
-    box.appendChild(el);
-    box.scrollTop = box.scrollHeight;
+    // 2. Potem generuje elegancką, skróconą odpowiedź GPT-4
+    return FinalModules[intent](thought);
 }
