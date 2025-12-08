@@ -1,5 +1,5 @@
 const RESPONSES = [
-    "To bardzo ciekawe zagadnienie, które odsyła nas do fundamentalnych kategorii rozumienia, interpretacji i praktyki, a jednocześnie pokazuje, że nawet pozornie konkretne obserwacje zyskują szerszy wymiar w świetle ujęć systemowych i transdyscyplinarnych.",
+   "To bardzo ciekawe zagadnienie, które odsyła nas do fundamentalnych kategorii rozumienia, interpretacji i praktyki, a jednocześnie pokazuje, że nawet pozornie konkretne obserwacje zyskują szerszy wymiar w świetle ujęć systemowych i transdyscyplinarnych.",
     "Twoja wypowiedź sygnalizuje złożoność problemu, w którym przecinają się perspektywy historyczne i współczesne, a także praktyczne i teoretyczne; dzięki temu możemy dostrzec ciągłość pytań o sens, metodę i kryteria uzasadnienia wiedzy.",
     "To spostrzeżenie jest dobrym punktem wyjścia do namysłu nad relacją między opisem a wyjaśnieniem, między intuicją a formalizacją, oraz między doświadczeniem indywidualnym a strukturami instytucjonalnymi, które nadają mu znaczenie w szerszym kontekście.",
     "Interesujące jest, że ten temat odsłania napięcie między normą a innowacją, między tym co stabilne a tym co zmienne, co szczególnie dobrze widać w analizach porównawczych oraz w modelach procesów długiego trwania.",
@@ -396,7 +396,7 @@ const RESPONSES = [
     "To ujęcie podkreśla, że równowaga między eksploracją a eksploatacją jest dynamiczna: wymaga czujności i gotowości do zmiany kursu.",
     "Warto podkreślić, że jawność ścieżek decyzyjnych ułatwia replikację: inni mogą powtórzyć i ocenić wnioski bez pozorów nieomylności.",
     "Ta konstatacja przypomina, że granice języka są granicami świata interpretacji: poszerzanie słownika otwiera nowe ścieżki rozumienia.",
-    "To rozpoznanie akcentuje wagę praktyk refleksyjnych: regularna analiza własnych metod zapobiega ich dogmatyzacji i utracie adekwatności."
+    "To rozpoznanie akcentuje wagę praktyk refleksyjnych: regularna analiza własnych metod zapobiega ich dogmatyzacji i utracie adekwatności.",
     "To sformułowanie wskazuje na potrzebę uporządkowania przestrzeni pojęciowej, tak aby przejścia między poziomami opisu pozostawały przejrzyste i podatne na audyt.",
     "W tej perspektywie warto zwrócić uwagę na kompatybilność definicji: spójność pojęć na poziomie operacyjnym i teoretycznym jest warunkiem stabilności interpretacji.",
     "Ta konstatacja podkreśla wagę jawnych założeń: dopiero ich eksplikacja umożliwia konstruktywną korektę i odpowiedzialne rozszerzanie zakresu wnioskowania.",
@@ -535,28 +535,25 @@ const RESPONSES = [
     "To rozpoznanie przypomina, że dowód ma formę: przejrzysta konstrukcja ułatwia audyt i korektę."
 ];
 
-function addMessage(text, sender) {
-    const chat = document.getElementById("chatWindow");
-    const div = document.createElement("div");
-    div.className = "message " + sender;
-    div.textContent = text;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
+function addMessage(sender, text) {
+    const chat = document.getElementById("chat");
+    const msg = document.createElement("div");
+    msg.className = sender;
+    msg.innerText = text;
+    chat.appendChild(msg);
 }
 
-function botReply() {
-    const msg = RESPONSES[Math.floor(Math.random() * RESPONSES.length)];
-    addMessage(msg, "bot");
-}
+document.getElementById("chat-form").addEventListener("submit", function(event) {
+    event.preventDefault();  // <--- BLOKUJE PRZEŁADOWANIE STRONY
 
-document.getElementById("userInput").addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-        const text = this.value.trim();
-        if (text === "") return;
+    const input = document.getElementById("input");
+    const text = input.value.trim();
+    if (text === "") return;
 
-        addMessage(text, "user");
-        this.value = "";
+    addMessage("user", text);
 
-        setTimeout(botReply, 300);
-    }
+    const reply = RESPONSES[Math.floor(Math.random() * RESPONSES.length)];
+    addMessage("bot", reply);
+
+    input.value = "";
 });
