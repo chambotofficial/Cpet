@@ -2,22 +2,24 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>CPET – zapytaj więcej</title>
+    <title>CPET 5.0 – zapytaj więcej.</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-    <div id="header">
-        <h1>CPET</h1>
-        <p>Zapytaj • Dowiedz się więcej • Myśl głębiej</p>
-    </div>
 
-    <div id="chat"></div>
+    <header>
+        <h1>CPET 5.0</h1>
+        <p>Rozmawiaj mądrzej. Myśl głębiej. Pytaj więcej.</p>
+    </header>
 
-    <form id="chat-form">
-        <input type="text" id="input" placeholder="Napisz wiadomość...">
-        <button type="submit">Wyślij</button>
-    </form>
+    <main>
+        <div id="chatBox" class="chat-box"></div>
+
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Napisz wiadomość...">
+            <button id="sendBtn">Wyślij</button>
+        </div>
+    </main>
 
     <script src="script.js"></script>
 </body>
