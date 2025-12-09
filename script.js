@@ -1,78 +1,61 @@
-const chat = document.getElementById("chat");
-const msgInput = document.getElementById("msg");
-const sendBtn = document.getElementById("send");
+const output = document.getElementById("output");
+const input = document.getElementById("userInput");
+const button = document.getElementById("sendBtn");
 
-// AVATAR IMAGE
-const BOT_AVATAR = "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=PiotrekAI";
-const USER_AVATAR = "https://api.dicebear.com/7.x/adventurer/svg?seed=User";
+// Funkcja skracająca wiadomość użytkownika do 1 sensownego fragmentu
+function extractMeaning(text) {
+    text = text.trim();
+    if (text.length > 120) text = text.slice(0, 120) + "...";
+    return text;
+}
 
-function addMessage(text, sender = "bot") {
-    const box = document.createElement("div");
-    box.className = "msgBox " + sender;
+// SZABLONY ODPOWIEDZI – CPET wplata tekst użytkownika w inteligentny sposób
+const SMART_TEMPLATES = [
+    "To, co mówisz — \"{USER}\" — można analizować na kilku poziomach. Jeśli spojrzymy szerzej, pojawiają się dodatkowe znaczenia warte rozwinięcia. Który aspekt najbardziej Cię interesuje?",
+    "Zatrzymałem się na Twojej myśli: \"{USER}\". To interesujące, bo prowadzi do szerszego kontekstu, o którym często się zapomina. Chcesz zgłębić ten temat dalej?",
+    "Kiedy piszesz \"{USER}\", widzę w tym ważny kierunek rozmowy. Możemy przyjrzeć się temu z różnych perspektyw — praktycznej, emocjonalnej lub logicznej. Która Cię ciekawi?",
+    "Twoja wiadomość — \"{USER}\" — jest dobrym punktem wyjścia. Jeśli rozbijemy to na mniejsze elementy, możemy dojść do ciekawych wniosków. W którą stronę chcesz iść?",
+    "Odbieram z tego, co napisałeś (\"{USER}\"), że poruszasz temat, który może mieć głębsze znaczenie. Mogę Ci pomóc to uporządkować i przeanalizować, jeśli chcesz.",
+    "\"{USER}\" — to brzmi jak pytanie, które dotyka szerszego obrazu. Możemy wejść w to głębiej i poszukać różnych interpretacji. Dasz znać, w jakim kierunku?",
+    "Zastanowiłem się nad Twoją myślą: \"{USER}\". Takie rzeczy rzadko są jednoznaczne, dlatego warto spojrzeć z dystansu. Chcesz żebym rozwinął ten wątek?",
+    "Widząc, że piszesz \"{USER}\", mam wrażenie, że chcesz dojść do czegoś konkretnego. Spróbuję pomóc — powiedz tylko, co jest dla Ciebie najważniejsze w tym temacie.",
+    "To ciekawe, że wspominasz \"{USER}\". Wbrew pozorom ten temat ma wiele warstw i można go omówić na różne sposoby. Wolisz analizę logiczną czy bardziej luźną rozmowę?",
+    "Gdy czytam \"{USER}\", widzę punkt wyjścia do głębszej refleksji. Mogę to rozwinąć na kilka sposobów — wybierz, w którą stronę chcesz pójść."
+];
 
-    const avatar = document.createElement("img");
-    avatar.className = "avatar";
-    avatar.src = sender === "bot" ? BOT_AVATAR : USER_AVATAR;
+// Funkcja generująca odpowiedź
+function generateResponse(userMsg) {
+    const cleaned = extractMeaning(userMsg);
+    const template = SMART_TEMPLATES[Math.floor(Math.random() * SMART_TEMPLATES.length)];
+    return template.replace("{USER}", cleaned);
+}
 
+// Funkcja dodająca wiadomości do okna rozmowy
+function addMessage(sender, text, avatar) {
     const bubble = document.createElement("div");
-    bubble.className = "bubble";
-    bubble.textContent = text;
+    bubble.className = "msg " + sender;
 
-    box.appendChild(avatar);
-    box.appendChild(bubble);
+    bubble.innerHTML = `
+        <img src="${avatar}" class="avatar">
+        <div class="bubble">${text}</div>
+    `;
 
-    chat.appendChild(box);
-    chat.scrollTop = chat.scrollHeight;
+    output.appendChild(bubble);
+    output.scrollTop = output.scrollHeight;
 }
 
-// CPET 11.0 – pseudo GPT-like thinking engine
-function CPETbrain(input) {
-    input = input.toLowerCase();
+button.addEventListener("click", () => {
+    const txt = input.value.trim();
+    if (txt === "") return;
 
-    // Mini-LLM: detects topic and synthesizes a human-like answer
-    const topics = [
-        ["kim jesteś", "Czym mogę być, zależy od tego, czego potrzebujesz. Mogę być rozmówcą, przewodnikiem albo systemem, który próbuje zrozumieć Twój sposób myślenia."],
-        ["co robisz", "Analizuję Twoją wiadomość i staram się powiązać ją z tym, co już wiem. Dzięki temu odpowiedź staje się głębsza i bardziej logiczna."],
-        ["hej", "Hej! Widzę Cię i słyszę. Co masz dziś w głowie?"],
-        ["jak dziala", "Przekształcam tekst na znaczenia, łączę je w struktury i dopiero wtedy buduję odpowiedź. To nie mechaniczne losowanie — to proces."],
-    ];
+    addMessage("user", txt, "user.png");
+    const reply = generateResponse(txt);
+    addMessage("bot", reply, "bot.png");
 
-    for (let t of topics) {
-        if (input.includes(t[0])) return t[1];
-    }
+    input.value = "";
+});
 
-    // Default deep-thought answer
-    return (
-        "To, co mówisz, można rozumieć na kilku poziomach. " +
-        "Jeśli spojrzymy szerzej, pojawiają się dodatkowe znaczenia, " +
-        "które warto rozwinąć. Powiedz proszę — w którą stronę chcesz iść?"
-    );
-}
-
-// Typing animation
-function botReply(text) {
-    addMessage("...", "bot");
-    setTimeout(() => {
-        // remove animation
-        chat.lastChild.remove();
-        addMessage(text, "bot");
-    }, 700);
-}
-
-// SEND HANDLER
-sendBtn.onclick = () => {
-    const text = msgInput.value.trim();
-    if (!text) return;
-
-    addMessage(text, "user");
-
-    const answer = CPETbrain(text);
-    botReply(answer);
-
-    msgInput.value = "";
-};
-
-msgInput.addEventListener("keydown", e => {
-    if (e.key === "Enter") sendBtn.click();
+input.addEventListener("keypress", e => {
+    if (e.key === "Enter") button.click();
 });
 
