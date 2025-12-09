@@ -1,15 +1,16 @@
+// Pobieramy elementy — teraz id="output" istnieje!
 const output = document.getElementById("output");
 const input = document.getElementById("userInput");
 const button = document.getElementById("sendBtn");
 
-// Funkcja skracająca wiadomość użytkownika do 1 sensownego fragmentu
+// Skraca wiadomość do max 120 znaków
 function extractMeaning(text) {
     text = text.trim();
     if (text.length > 120) text = text.slice(0, 120) + "...";
     return text;
 }
 
-// SZABLONY ODPOWIEDZI – CPET wplata tekst użytkownika w inteligentny sposób
+// Szablony odpowiedzi
 const SMART_TEMPLATES = [
     "To, co mówisz — \"{USER}\" — można analizować na kilku poziomach. Jeśli spojrzymy szerzej, pojawiają się dodatkowe znaczenia warte rozwinięcia. Który aspekt najbardziej Cię interesuje?",
     "Zatrzymałem się na Twojej myśli: \"{USER}\". To interesujące, bo prowadzi do szerszego kontekstu, o którym często się zapomina. Chcesz zgłębić ten temat dalej?",
@@ -23,20 +24,22 @@ const SMART_TEMPLATES = [
     "Gdy czytam \"{USER}\", widzę punkt wyjścia do głębszej refleksji. Mogę to rozwinąć na kilka sposobów — wybierz, w którą stronę chcesz pójść."
 ];
 
-// Funkcja generująca odpowiedź
+// Generuje odpowiedź bota
 function generateResponse(userMsg) {
     const cleaned = extractMeaning(userMsg);
     const template = SMART_TEMPLATES[Math.floor(Math.random() * SMART_TEMPLATES.length)];
     return template.replace("{USER}", cleaned);
 }
 
-// Funkcja dodająca wiadomości do okna rozmowy
-function addMessage(sender, text, avatar) {
+// Dodaje wiadomość do czatu (z emoji zamiast obrazków)
+function addMessage(sender, text) {
     const bubble = document.createElement("div");
     bubble.className = "msg " + sender;
 
+    const avatarText = sender === "user" ? "👤" : "🤖";
+
     bubble.innerHTML = `
-        <img src="${avatar}" class="avatar">
+        <div class="avatar">${avatarText}</div>
         <div class="bubble">${text}</div>
     `;
 
@@ -44,18 +47,19 @@ function addMessage(sender, text, avatar) {
     output.scrollTop = output.scrollHeight;
 }
 
+// Obsługa przycisku
 button.addEventListener("click", () => {
     const txt = input.value.trim();
     if (txt === "") return;
 
-    addMessage("user", txt, "user.png");
+    addMessage("user", txt);
     const reply = generateResponse(txt);
-    addMessage("bot", reply, "bot.png");
+    addMessage("bot", reply);
 
     input.value = "";
 });
 
+// Obsługa Enter
 input.addEventListener("keypress", e => {
     if (e.key === "Enter") button.click();
 });
-
