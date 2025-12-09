@@ -1,113 +1,29 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>CPET 11.0 — Real Thinking AI</title>
-    <style>
-        body {
-            background: #111;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            color: #fff;
-        }
-        h1 {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 32px;
-        }
-        #output {
-            width: 90%;
-            max-width: 1200px;
-            height: 70vh;
-            margin: 20px auto;
-            padding: 20px;
-            overflow-y: auto;
-            background: #181818;
-            border-radius: 10px;
-        }
-        .msg {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-        .user {
-            flex-direction: row-reverse;
-        }
-        .user .avatar {
-            margin-left: 10px;
-            margin-right: 0;
-        }
-        .avatar {
-            width: 42px;
-            height: 42px;
-            margin-right: 10px;
-            border-radius: 50%;
-            background: #444;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            color: white;
-        }
-        .bubble {
-            padding: 10px 15px;
-            border-radius: 12px;
-            max-width: 70%;
-            line-height: 1.4;
-        }
-        .user .bubble {
-            background: #005eff;
-        }
-        .bot .bubble {
-            background: #2c2c2c;
-        }
-        #bottom {
-            width: 100%;
-            position: fixed;
-            left: 0;
-            bottom: 0;
-            background: #0f0f0f;
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            border-top: 1px solid #333;
-        }
-        #userInput {
-            width: 70%;
-            padding: 12px;
-            border-radius: 6px;
-            border: none;
-            font-size: 16px;
-            outline: none;
-            background: #222;
-            color: white;
-        }
-        #sendBtn {
-            padding: 12px 20px;
-            background: #28a745;
-            border: none;
-            color: white;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        #sendBtn:hover {
-            background: #1f8c3b;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPET 30.0 — Real Thinking Engine</title>
+<link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <h1>CPET Co chodzi ci po głowie ?</h1>
-    <div id="output"></div>
 
-    <div id="bottom">
-        <input id="userInput" placeholder="Napisz wiadomość..." autocomplete="off" />
-        <button id="sendBtn">Wyślij</button>
+<div id="app">
+    <header>
+        <img src="https://i.imgur.com/5jZy4hT.png" class="avatar">
+        <h1>CPET 30.0</h1>
+        <p class="subtitle">Neutral GPT-4 Style — Created by Piotrek</p>
+    </header>
+
+    <div id="chat"></div>
+
+    <div id="inputBox">
+        <input id="userInput" type="text" placeholder="Napisz coś..." autocomplete="off">
+        <button id="sendBtn">➤</button>
     </div>
+</div>
 
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
