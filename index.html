@@ -20,7 +20,7 @@
             font-size: 32px;
         }
 
-        #chat {
+        #output {
             width: 90%;
             max-width: 1200px;
             height: 70vh;
@@ -50,12 +50,15 @@
             line-height: 1.4;
         }
 
-        .me {
-            background: #005eff;
+        .user {
             align-self: flex-end;
         }
 
-        .bot {
+        .user .bubble {
+            background: #005eff;
+        }
+
+        .bot .bubble {
             background: #2c2c2c;
         }
 
@@ -80,6 +83,8 @@
             border: none;
             font-size: 16px;
             outline: none;
+            background: #222;
+            color: white;
         }
 
         #sendBtn {
@@ -96,13 +101,11 @@
             background: #1f8c3b;
         }
     </style>
-
 </head>
 <body>
-
     <h1>CPET 11.0 — Real Thinking AI</h1>
 
-    <div id="chat"></div>
+    <div id="output"></div>
 
     <div id="bottom">
         <input id="userInput" placeholder="Napisz wiadomość..." autocomplete="off">
