@@ -1,25 +1,114 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-<title>CPET 11.5 — Real Thinking AI</title>
-<link rel="stylesheet" href="style.css">
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPET 11.0 — Real Thinking AI</title>
 
+    <style>
+        body {
+            background: #111;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 32px;
+        }
+
+        #chat {
+            width: 90%;
+            max-width: 1200px;
+            height: 70vh;
+            margin: 20px auto;
+            padding: 20px;
+            overflow-y: auto;
+            background: #181818;
+            border-radius: 10px;
+        }
+
+        .msg {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .avatar {
+            width: 42px;
+            height: 42px;
+            margin-right: 10px;
+        }
+
+        .bubble {
+            padding: 10px 15px;
+            border-radius: 12px;
+            max-width: 70%;
+            line-height: 1.4;
+        }
+
+        .me {
+            background: #005eff;
+            align-self: flex-end;
+        }
+
+        .bot {
+            background: #2c2c2c;
+        }
+
+        /* Dół strony */
+        #bottom {
+            width: 100%;
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            background: #0f0f0f;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            border-top: 1px solid #333;
+        }
+
+        #userInput {
+            width: 70%;
+            padding: 12px;
+            border-radius: 6px;
+            border: none;
+            font-size: 16px;
+            outline: none;
+        }
+
+        #sendBtn {
+            padding: 12px 20px;
+            background: #28a745;
+            border: none;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #sendBtn:hover {
+            background: #1f8c3b;
+        }
+    </style>
+
+</head>
 <body>
 
-<h1>CPET 11.5 — Real Thinking AI</h1>
+    <h1>CPET 11.0 — Real Thinking AI</h1>
 
-<div id="output"></div>
+    <div id="chat"></div>
 
-<div id="bottom">
-    <input id="userInput" placeholder="Napisz wiadomość..." />
-    <button id="sendBtn">Wyślij</button>
-</div>
+    <div id="bottom">
+        <input id="userInput" placeholder="Napisz wiadomość..." autocomplete="off">
+        <button id="sendBtn">Wyślij</button>
+    </div>
 
-<script src="script.js"></script>
-
+    <script src="script.js"></script>
 </body>
 </html>
-
-
