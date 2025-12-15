@@ -1,120 +1,132 @@
-// ===============================================
-// TFPS-23 JS — Koniszewski Model (wersja browser)
-// Ładowanie dużego korpusu z corpus.txt
-// ===============================================
+console.log("CPET 12.0 — TFPS ENGINE LOADED");
 
-let RAW_CORPUS = "";
+// ===============================
+// 1. WCZYTYWANIE KORPUSU
+// ===============================
+
 let CORPUS = [];
 
-// === Normalizacja tekstu ========================
-function normalize(t) {
-    t = t.toLowerCase();
-    const repl = {
-        "ą":"a","ć":"c","ę":"e","ł":"l","ń":"n",
-        "ó":"o","ś":"s","ż":"z","ź":"z"
-    };
-    for (const a in repl) t = t.replaceAll(a, repl[a]);
-    return t.replace(/[^a-z0-9 ]/g, " ").trim();
+async function loadCorpus() {
+    try {
+        const r = await fetch("corpus.txt");
+        const text = await r.text();
+        CORPUS = autosplit(text);
+        console.log("Załadowano korpus:", CORPUS.length, "linii");
+    } catch (e) {
+        console.error("Błąd ładowania korpusu:", e);
+    }
 }
 
-// === Dzielenie na zdania (bez usuwania treści!) ===
+loadCorpus();
+
+// ===============================
+// 2. AUTOSPLIT — czyszczenie tekstu
+// ===============================
+
 function autosplit(raw) {
-    let clean = raw.replace(/\s+/g, " ").trim();
-    let parts = clean.split(/(?<=[.?!])\s+/);
+    const clean = raw.replace(/\s+/g, " ").trim();
+    const parts = clean.split(/(?<=[.?!])\s+/);
 
     let out = [];
     for (let p of parts) {
         p = p.trim();
-        if (p.length < 5) continue;
-        if (!/[.?!]$/.test(p)) p += ".";
-        out.push(p);
+        if (p.length > 5) out.push(p);
     }
     return out;
 }
 
-// === Szukanie najlepszego zdania ==================
-function bestLineFor(word) {
-    const nword = normalize(word);
-    let best = null;
-    let bestPos = 999999999;
+// ===============================
+// 3. NORMALIZACJA
+// ===============================
 
-    for (const line of CORPUS) {
+function normalize(t) {
+    const map = { "ą":"a","ć":"c","ę":"e","ł":"l","ń":"n","ó":"o","ś":"s","ż":"z","ź":"z" };
+    t = t.toLowerCase();
+    for (let k in map) t = t.replaceAll(k, map[k]);
+    return t.replace(/[^a-z0-9 ]/g, "").trim();
+}
+
+// ===============================
+// 4. SZUKANIE NAJLEPSZEJ LINII
+// ===============================
+
+function bestLineFor(word) {
+    let best = null;
+    let bestPos = 999999;
+
+    const key = normalize(word);
+
+    for (let line of CORPUS) {
         const nline = normalize(line);
-        const pos = nline.indexOf(nword);
+        const pos = nline.indexOf(key);
         if (pos !== -1 && pos < bestPos) {
             bestPos = pos;
             best = line;
         }
     }
-
     return best;
 }
 
-// === Przycięcie do dwóch zdań =====================
+// ===============================
+// 5. SKRÓT DO 2 ZDAŃ
+// ===============================
+
 function trimTwo(text) {
-    const parts = text.split(".");
-    const good = parts.filter(x => x.trim().length > 0);
-    if (good.length >= 2)
-        return good[0].trim() + ". " + good[1].trim() + ".";
-    return good[0].trim() + ".";
+    let parts = text.split(".");
+    parts = parts.map(s => s.trim()).filter(s => s);
+    if (parts.length >= 2) return parts[0] + ". " + parts[1] + ".";
+    return parts[0] + ".";
 }
 
-// === Główna funkcja odpowiedzi =====================
-function generateResponse(userText) {
-    const norm = normalize(userText);
-    if (!norm) return "Napisz coś więcej 🙂";
+// ===============================
+// 6. GŁÓWNY SILNIK AI
+// ===============================
 
-    const key = norm.split(" ").pop();
+function answer(msg) {
+    if (!msg.trim()) return "Powiedz coś więcej 🙂";
+
+    const words = msg.trim().split(" ");
+    const key = words[words.length - 1];
+
     const line = bestLineFor(key);
-
-    if (!line)
-        return `Nie mam jeszcze informacji o słowie: "${key}".`;
+    if (!line) return "Interesujące. Rozwiń proszę swój wątek — możemy wejść głębiej w temat.";
 
     return trimTwo(line);
 }
 
-// === Ładowanie korpusu z pliku =====================
+// ===============================
+// 7. SYSTEM WIADOMOŚCI
+// ===============================
 
-console.log("TFPS-23 JS — ładowanie corpus.txt...");
-
-fetch("corpus.txt")
-    .then(r => r.text())
-    .then(text => {
-        RAW_CORPUS = text;
-        CORPUS = autosplit(text);
-
-        console.log("Model gotowy.");
-        console.log("Załadowano:", CORPUS.length, "zdań.");
-    })
-    .catch(err => console.error("Błąd ładowania corpus.txt:", err));
-
-// === Interfejs HTML =================================
-
-function sendMessage() {
-    const input = document.getElementById("userInput");
-    const text = input.value.trim();
-    if (!text) return;
-
-    addMessage(text, "user");
-
-    const reply = generateResponse(text);
-    addMessage(reply, "ai");
-
-    input.value = "";
-}
-
-function addMessage(text, who) {
+function addMessage(author, text) {
     const chat = document.getElementById("chat");
+
     const div = document.createElement("div");
-    div.className = who === "user" ? "userMsg" : "aiMsg";
+    div.className = author === "Ty" ? "msg-user" : "msg-ai";
     div.textContent = text;
+
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("sendBtn").onclick = sendMessage;
-    document.getElementById("userInput").addEventListener("keydown", e => {
-        if (e.key === "Enter") sendMessage();
-    });
+// ===============================
+// 8. OBSŁUGA WYŚLIJ
+// ===============================
+
+document.getElementById("sendBtn").addEventListener("click", sendMsg);
+document.addEventListener("keydown", e => {
+    if (e.key === "Enter") sendMsg();
 });
+
+function sendMsg() {
+    const input = document.getElementById("userInput");
+    const msg = input.value.trim();
+
+    if (!msg) return;
+
+    addMessage("Ty", msg);
+    input.value = "";
+
+    const ai = answer(msg);
+    setTimeout(() => addMessage("AI", ai), 200);
+}
