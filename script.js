@@ -1,132 +1,136 @@
-console.log("CPET 12.0 — TFPS ENGINE LOADED");
+// ============================================================
+// CPET 13.0 — Real Thinking AI (JS Version)
+// Ładowanie ogromnego korpusu + inteligentne zdania
+// ============================================================
 
-// ===============================
-// 1. WCZYTYWANIE KORPUSU
-// ===============================
+console.log("CPET 13.0 — uruchomiony");
+
+// ======== 1. Wczytanie korpusu z pliku =======================
 
 let CORPUS = [];
 
 async function loadCorpus() {
     try {
-        const r = await fetch("corpus.txt");
-        const text = await r.text();
-        CORPUS = autosplit(text);
-        console.log("Załadowano korpus:", CORPUS.length, "linii");
+        const res = await fetch("corpus.txt");
+        const text = await res.text();
+        CORPUS = splitCorpus(text);
+        console.log("Załadowano linijek:", CORPUS.length);
     } catch (e) {
         console.error("Błąd ładowania korpusu:", e);
     }
 }
 
-loadCorpus();
-
-// ===============================
-// 2. AUTOSPLIT — czyszczenie tekstu
-// ===============================
-
-function autosplit(raw) {
-    const clean = raw.replace(/\s+/g, " ").trim();
-    const parts = clean.split(/(?<=[.?!])\s+/);
-
-    let out = [];
-    for (let p of parts) {
-        p = p.trim();
-        if (p.length > 5) out.push(p);
-    }
-    return out;
-}
-
-// ===============================
-// 3. NORMALIZACJA
-// ===============================
+// ======== 2. Normalizacja tekstu ============================
 
 function normalize(t) {
-    const map = { "ą":"a","ć":"c","ę":"e","ł":"l","ń":"n","ó":"o","ś":"s","ż":"z","ź":"z" };
-    t = t.toLowerCase();
-    for (let k in map) t = t.replaceAll(k, map[k]);
-    return t.replace(/[^a-z0-9 ]/g, "").trim();
+    return t
+        .toLowerCase()
+        .replace(/[ąćęłńóśżź]/g, c => (
+            { "ą": "a", "ć": "c", "ę": "e", "ł": "l", "ń": "n", "ó": "o", "ś": "s", "ż": "z", "ź": "z" }[c]
+        ))
+        .replace(/[^a-z0-9 ]/g, " ")
+        .trim();
 }
 
-// ===============================
-// 4. SZUKANIE NAJLEPSZEJ LINII
-// ===============================
+// ======== 3. Split korpusu na linie ========================
 
-function bestLineFor(word) {
+function splitCorpus(raw) {
+    return raw.split(/\n+/).map(x => x.trim()).filter(x => x.length > 5);
+}
+
+// ======== 4. Inteligentny podział zdań =======================
+// ignoruje skróty typu: ang., np., itp., m.in., itd.
+
+const ABBREV = [
+    "ang", "np", "itp", "tj", "tzn", "m.in", "al", "dr", "hab",
+    "prof", "rys", "fr", "niem", "łac", "wł", "zob", "źródło"
+];
+
+function splitSentences(text) {
+    const parts = text.split(/(?<=\.)/);
+    const result = [];
+    let buffer = "";
+
+    for (let p of parts) {
+        buffer += p.trim();
+        let last = buffer.split(/\s+/).slice(-1)[0].replace(".", "");
+        if (buffer.endsWith(".") && !ABBREV.includes(last.toLowerCase())) {
+            result.push(buffer.trim());
+            buffer = "";
+        }
+    }
+
+    if (buffer.length > 0) result.push(buffer.trim());
+
+    return result;
+}
+
+// ======== 5. Szukanie najlepszego zdania ======================
+
+function findBestLine(msg) {
+    let key = normalize(msg).split(" ").pop();
     let best = null;
     let bestPos = 999999;
 
-    const key = normalize(word);
-
     for (let line of CORPUS) {
-        const nline = normalize(line);
-        const pos = nline.indexOf(key);
+        let norm = normalize(line);
+        let pos = norm.indexOf(key);
         if (pos !== -1 && pos < bestPos) {
-            bestPos = pos;
             best = line;
+            bestPos = pos;
         }
     }
     return best;
 }
 
-// ===============================
-// 5. SKRÓT DO 2 ZDAŃ
-// ===============================
+// ======== 6. Generator odpowiedzi GPT-style ==================
 
-function trimTwo(text) {
-    let parts = text.split(".");
-    parts = parts.map(s => s.trim()).filter(s => s);
-    if (parts.length >= 2) return parts[0] + ". " + parts[1] + ".";
-    return parts[0] + ".";
+function generateResponse(msg) {
+    const line = findBestLine(msg);
+
+    if (!line)
+        return "Interesujące pytanie. Możesz powiedzieć więcej, co masz na myśli?";
+
+    const sentences = splitSentences(line);
+
+    if (sentences.length >= 2)
+        return sentences[0] + " " + sentences[1];
+
+    return sentences[0];
 }
 
-// ===============================
-// 6. GŁÓWNY SILNIK AI
-// ===============================
+// ======== 7. Interfejs — obsługa czatu =======================
 
-function answer(msg) {
-    if (!msg.trim()) return "Powiedz coś więcej 🙂";
+const input = document.getElementById("userInput");
+const sendBtn = document.getElementById("sendBtn");
+const chatBox = document.getElementById("chat");
 
-    const words = msg.trim().split(" ");
-    const key = words[words.length - 1];
-
-    const line = bestLineFor(key);
-    if (!line) return "Interesujące. Rozwiń proszę swój wątek — możemy wejść głębiej w temat.";
-
-    return trimTwo(line);
+function addMessage(text, sender) {
+    const box = document.createElement("div");
+    box.className = sender;
+    box.textContent = text;
+    chatBox.appendChild(box);
+    chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// ===============================
-// 7. SYSTEM WIADOMOŚCI
-// ===============================
-
-function addMessage(author, text) {
-    const chat = document.getElementById("chat");
-
-    const div = document.createElement("div");
-    div.className = author === "Ty" ? "msg-user" : "msg-ai";
-    div.textContent = text;
-
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-}
-
-// ===============================
-// 8. OBSŁUGA WYŚLIJ
-// ===============================
-
-document.getElementById("sendBtn").addEventListener("click", sendMsg);
-document.addEventListener("keydown", e => {
-    if (e.key === "Enter") sendMsg();
-});
-
-function sendMsg() {
-    const input = document.getElementById("userInput");
+function handleSend() {
     const msg = input.value.trim();
-
     if (!msg) return;
 
-    addMessage("Ty", msg);
+    addMessage(msg, "me");
     input.value = "";
 
-    const ai = answer(msg);
-    setTimeout(() => addMessage("AI", ai), 200);
+    setTimeout(() => {
+        const reply = generateResponse(msg);
+        addMessage(reply, "ai");
+    }, 100);
 }
+
+sendBtn.addEventListener("click", handleSend);
+input.addEventListener("keydown", e => {
+    if (e.key === "Enter") handleSend();
+});
+
+// ======== 8. Start systemu ==================================
+
+loadCorpus();
