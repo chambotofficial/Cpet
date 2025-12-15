@@ -1,136 +1,176 @@
-// ============================================================
-// CPET 13.0 — Real Thinking AI (JS Version)
-// Ładowanie ogromnego korpusu + inteligentne zdania
-// ============================================================
+//----------------------------------------------
+//  CPET 13.2 — Real Thinking AI (JS Corpus Engine)
+//----------------------------------------------
 
-console.log("CPET 13.0 — uruchomiony");
+console.log("CPET 13.2 — Real Thinking AI startuje...");
 
-// ======== 1. Wczytanie korpusu z pliku =======================
-
+// GLOBAL
 let CORPUS = [];
+
+//----------------------------------------------
+// 1. Wczytanie pliku corpus.txt
+//----------------------------------------------
 
 async function loadCorpus() {
     try {
-        const res = await fetch("corpus.txt");
-        const text = await res.text();
-        CORPUS = splitCorpus(text);
-        console.log("Załadowano linijek:", CORPUS.length);
+        const response = await fetch("corpus.txt");
+        const text = await response.text();
+
+        const fixed = fixBrokenWikipedia(text);
+        CORPUS = smartSplit(fixed);
+
+        console.log("Załadowano zdań:", CORPUS.length);
     } catch (e) {
         console.error("Błąd ładowania korpusu:", e);
     }
 }
 
-// ======== 2. Normalizacja tekstu ============================
+//----------------------------------------------
+// 2. Naprawa uszkodzonych fragmentów Wikipedii
+//----------------------------------------------
+
+function fixBrokenWikipedia(text) {
+    return text
+        .replace(/\(ang\.$/gm, "(ang.)")
+        .replace(/\(np\.$/gm, "(np.)")
+        .replace(/\(tj\.$/gm, "(tj.)");
+}
+
+//----------------------------------------------
+// 3. Inteligentny podział na zdania
+//----------------------------------------------
+
+function smartSplit(text) {
+    const ABBREV = [
+        "ang", "np", "itp", "itd", "tj", "tzn", "m.in", "dr", "hab", "prof",
+        "fr", "niem", "łac", "zob", "rys", "al", "ur", "zm"
+    ];
+
+    let out = [];
+    let current = "";
+
+    for (let i = 0; i < text.length; i++) {
+        current += text[i];
+
+        if (text[i] === ".") {
+
+            let token = current.trim().split(/\s+/).pop().replace(".", "").toLowerCase();
+            if (ABBREV.includes(token)) continue;
+
+            let next = text[i + 1] || "";
+
+            if (next === " " && /[A-ZĄĆĘŁŃÓŚŻŹ]/.test(text[i + 2] || "")) {
+                out.push(current.trim());
+                current = "";
+            } else if (next === "\n" || next === "\"" || next === ")") {
+                out.push(current.trim());
+                current = "";
+            }
+        }
+    }
+
+    if (current.trim().length > 0) out.push(current.trim());
+    return out;
+}
+
+//----------------------------------------------
+// 4. Normalizacja tekstu
+//----------------------------------------------
 
 function normalize(t) {
-    return t
-        .toLowerCase()
-        .replace(/[ąćęłńóśżź]/g, c => (
-            { "ą": "a", "ć": "c", "ę": "e", "ł": "l", "ń": "n", "ó": "o", "ś": "s", "ż": "z", "ź": "z" }[c]
-        ))
+    return t.toLowerCase()
+        .replace(/ą/g, "a")
+        .replace(/ć/g, "c")
+        .replace(/ę/g, "e")
+        .replace(/ł/g, "l")
+        .replace(/ń/g, "n")
+        .replace(/ó/g, "o")
+        .replace(/ś/g, "s")
+        .replace(/ż/g, "z")
+        .replace(/ź/g, "z")
         .replace(/[^a-z0-9 ]/g, " ")
         .trim();
 }
 
-// ======== 3. Split korpusu na linie ========================
+//----------------------------------------------
+// 5. Znalezienie najlepszego zdania
+//----------------------------------------------
 
-function splitCorpus(raw) {
-    return raw.split(/\n+/).map(x => x.trim()).filter(x => x.length > 5);
-}
-
-// ======== 4. Inteligentny podział zdań =======================
-// ignoruje skróty typu: ang., np., itp., m.in., itd.
-
-const ABBREV = [
-    "ang", "np", "itp", "tj", "tzn", "m.in", "al", "dr", "hab",
-    "prof", "rys", "fr", "niem", "łac", "wł", "zob", "źródło"
-];
-
-function splitSentences(text) {
-    const parts = text.split(/(?<=\.)/);
-    const result = [];
-    let buffer = "";
-
-    for (let p of parts) {
-        buffer += p.trim();
-        let last = buffer.split(/\s+/).slice(-1)[0].replace(".", "");
-        if (buffer.endsWith(".") && !ABBREV.includes(last.toLowerCase())) {
-            result.push(buffer.trim());
-            buffer = "";
-        }
-    }
-
-    if (buffer.length > 0) result.push(buffer.trim());
-
-    return result;
-}
-
-// ======== 5. Szukanie najlepszego zdania ======================
-
-function findBestLine(msg) {
-    let key = normalize(msg).split(" ").pop();
+function findBestLine(word) {
+    const nword = normalize(word);
     let best = null;
-    let bestPos = 999999;
+    let bestPos = 1e12;
 
     for (let line of CORPUS) {
-        let norm = normalize(line);
-        let pos = norm.indexOf(key);
+        let nline = normalize(line);
+        let pos = nline.indexOf(nword);
         if (pos !== -1 && pos < bestPos) {
             best = line;
             bestPos = pos;
         }
     }
+
     return best;
 }
 
-// ======== 6. Generator odpowiedzi GPT-style ==================
+//----------------------------------------------
+// 6. Zwrócenie dwóch pełnych zdań
+//----------------------------------------------
 
-function generateResponse(msg) {
-    const line = findBestLine(msg);
+function twoSentences(text) {
+    let parts = smartSplit(text);
 
-    if (!line)
-        return "Interesujące pytanie. Możesz powiedzieć więcej, co masz na myśli?";
+    if (parts.length >= 2)
+        return parts[0] + " " + parts[1];
 
-    const sentences = splitSentences(line);
-
-    if (sentences.length >= 2)
-        return sentences[0] + " " + sentences[1];
-
-    return sentences[0];
+    return parts[0] || text;
 }
 
-// ======== 7. Interfejs — obsługa czatu =======================
+//----------------------------------------------
+// 7. Generowanie odpowiedzi dla użytkownika
+//----------------------------------------------
 
-const input = document.getElementById("userInput");
-const sendBtn = document.getElementById("sendBtn");
-const chatBox = document.getElementById("chat");
+function generateAnswer(msg) {
+    let norm = normalize(msg);
+    if (!norm) return "Napisz coś więcej 🙂";
 
-function addMessage(text, sender) {
-    const box = document.createElement("div");
-    box.className = sender;
-    box.textContent = text;
-    chatBox.appendChild(box);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    let key = norm.split(" ").pop();
+    let found = findBestLine(key);
+
+    if (!found)
+        return "To ciekawe. Rozwiń proszę myśl — możemy wejść głębiej w temat.";
+
+    return twoSentences(found);
 }
 
-function handleSend() {
-    const msg = input.value.trim();
-    if (!msg) return;
+//----------------------------------------------
+// 8. Obsługa UI
+//----------------------------------------------
 
-    addMessage(msg, "me");
+document.getElementById("sendBtn").addEventListener("click", () => {
+    const input = document.getElementById("userInput");
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage("Ty", text);
+
+    let ans = generateAnswer(text);
+    addMessage("CPET", ans);
+
     input.value = "";
-
-    setTimeout(() => {
-        const reply = generateResponse(msg);
-        addMessage(reply, "ai");
-    }, 100);
-}
-
-sendBtn.addEventListener("click", handleSend);
-input.addEventListener("keydown", e => {
-    if (e.key === "Enter") handleSend();
 });
 
-// ======== 8. Start systemu ==================================
+function addMessage(who, text) {
+    const box = document.getElementById("chat");
+    let div = document.createElement("div");
+    div.className = who === "Ty" ? "msgUser" : "msgAI";
+    div.innerText = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
+
+//----------------------------------------------
+// START
+//----------------------------------------------
 
 loadCorpus();
